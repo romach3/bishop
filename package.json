@@ -21,7 +21,7 @@
   },
   "scripts": {
     "start:dev": "yarn nodemon",
-    "build": "rimraf ./build && tsc",
+    "build": "yarn && rimraf ./build && tsc",
     "start": "yarn build && node build/app.js"
   },
   "devDependencies": {
