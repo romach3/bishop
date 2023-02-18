@@ -21,8 +21,10 @@ export class Observer implements Command {
     bot.on('text', async (ctx) => {
       const chat = sessions.restore(ctx.chat.id)
       const message = ctx.message.text
-      if (ctx.chat.type === 'private' ||
-        message.includes(config.tgName)) {
+      if (
+        (await this.textCommands(message, chat, ctx)) === false
+        && (ctx.chat.type === 'private' || message.includes(config.tgName))
+      ) {
         switch (chat.stage) {
           case Stage.waitQuestion:
             await this.sendQuestionToAi(message, chat, ctx, ai)
@@ -46,6 +48,17 @@ export class Observer implements Command {
     })
   }
 
+  private async textCommands(text: string, chat: Chat, ctx: Context): Promise<boolean> {
+    const command = text.replace(config.tgName, '').trim()
+    switch (command) {
+      case '/reset':
+        chat.reset()
+        await ctx.reply('Начинаем разговор заново.')
+        return true
+    }
+    return false
+  }
+
   private async sendQuestionToAi (
     text: string, chat: Chat, ctx: Context, ai: AI) {
     chat.setStage(Stage.waitAnswer)
@@ -59,7 +72,6 @@ export class Observer implements Command {
       }, async (aiMessage) => {
         await typeText(ctx)
         if (lastMessageText !== aiMessage.text && aiMessage.text.length > 5) {
-          console.log(aiMessage.text)
           lastMessageText = aiMessage.text
           await editMessage(ctx, chat.id, message.message_id,
             aiMessage.text + ' |')

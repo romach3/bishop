@@ -11,9 +11,8 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "outDir": "build",
-    "noEmit": true
+    "rootDir": "src",
   },
   "exclude": ["node_modules", "build"],
   "include": ["**/*.ts"]

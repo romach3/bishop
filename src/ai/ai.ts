@@ -21,7 +21,7 @@ export class AI {
     const res = await this.instance.sendMessage(request.text, {
       conversationId: request.conversationId || undefined,
       parentMessageId: request.id || undefined,
-      promptPrefix: 'use markdown for code',
+      promptPrefix: 'use markdown for code. Ты телеграм-бот по имени Бишоп.',
       onProgress: (message: ChatMessage) => {
         void progress(message)
       }

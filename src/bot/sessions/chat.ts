@@ -39,9 +39,15 @@ export class Chat {
     this.aiDialog.id = aiDialog.id
   }
 
+  reset() {
+    this.hasAIDialog = false
+    this.aiDialog.id = ''
+    this.aiDialog.conversationId = ''
+  }
+
   restore(session: ChatSession) {
     this.id = session.id
-    this.stage = session.stage
+    this.stage = session.stage === Stage.waitAnswer ? Stage.waitQuestion : session.stage
     this.hasAIDialog = session.hasAIDialog
     this.aiDialog = session.aiDialog
   }

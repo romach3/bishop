@@ -1,5 +1,5 @@
 {
-  "name": "redqueen",
+  "name": "bishop",
   "version": "1.0.0",
   "exports": {
     ".": {
@@ -22,7 +22,7 @@
   "scripts": {
     "start:dev": "yarn nodemon",
     "build": "rimraf ./build && tsc",
-    "start": "npm run build && node build/app.js"
+    "start": "yarn build && node build/app.js"
   },
   "devDependencies": {
     "@types/node": "^18.14.0",
