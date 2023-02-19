@@ -1,15 +1,14 @@
 import { Telegraf } from 'telegraf'
 
 import { Command } from '../commands.js'
-import { Sessions } from '../sessions/sessions.js'
 import { config } from '../../config.js'
+import { Actions } from '../actions.js'
 
 export class Reset implements Command {
-  register(bot: Telegraf, sessions: Sessions) {
+  register(bot: Telegraf, actions: Actions) {
     bot.command(['reset', config.tgName + ' /reset'], async (ctx) => {
-      const chat = sessions.restore(ctx.chat.id)
-      chat.reset()
-      await ctx.reply('Начинаем разговор заново.')
+      const chatActions = actions.forChat(ctx)
+      await chatActions.resetDialogAction()
     })
   }
 }

@@ -16,7 +16,7 @@ export class Sessions {
     try {
       const sessions = Object.values(this.items)
       .reduce((storage, chat) => ([...storage, chat.backup()]), [] as ChatSession[])
-      fs.writeFileSync(process.cwd() + '/storage.json', JSON.stringify(sessions))
+      sessions.length > 0 && fs.writeFileSync(process.cwd() + '/storage.json', JSON.stringify(sessions))
     } catch (e) {
       console.error(e)
     }

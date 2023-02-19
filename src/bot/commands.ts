@@ -1,9 +1,8 @@
 import { Telegraf } from 'telegraf'
-import { Sessions } from './sessions/sessions.js'
-import { AI } from '../ai/ai.js'
+import { Actions } from './actions'
 
 export interface Command {
-  register: (bot: Telegraf, sessions: Sessions, ai: AI) => void
+  register: (bot: Telegraf, actions: Actions) => void
 }
 
 export class Commands {
@@ -18,7 +17,7 @@ export class Commands {
     return this
   }
 
-  register(bot: Telegraf, sessions: Sessions, ai: AI) {
-    this.commands.forEach((command) => command.register(bot, sessions, ai))
+  register(bot: Telegraf, actions: Actions) {
+    this.commands.forEach((command) => command.register(bot, actions))
   }
 }

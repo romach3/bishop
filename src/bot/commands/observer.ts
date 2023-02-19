@@ -1,96 +1,40 @@
-import { Context, Telegraf } from 'telegraf'
-import { throttle } from 'throttle-typescript'
+import { Telegraf } from 'telegraf'
 
 import { Command } from '../commands.js'
-import { Sessions } from '../sessions/sessions.js'
-import { Chat, Stage } from '../sessions/chat.js'
+import { Stage } from '../sessions/chat.js'
 import { config } from '../../config.js'
-import { AI } from '../../ai/ai.js'
-
-const editMessage = throttle(
-  async (ctx: Context, chatId: number, messageId: number, text: string) => {
-    await ctx.telegram.editMessageText(chatId, messageId, messageId.toString(),
-      text)
-  }, 3000)
-const typeText = throttle(async (ctx: Context) => {
-  await ctx.sendChatAction('typing')
-}, 5000)
+import { Actions, ChatActions } from '../actions.js'
 
 export class Observer implements Command {
-  register (bot: Telegraf, sessions: Sessions, ai: AI) {
+  register (bot: Telegraf, actions: Actions) {
     bot.on('text', async (ctx) => {
-      const chat = sessions.restore(ctx.chat.id)
-      const message = ctx.message.text
-      if (
-        (await this.textCommands(message, chat, ctx)) === false
-        && (ctx.chat.type === 'private' || message.includes(config.tgName))
-      ) {
-        switch (chat.stage) {
+      const chatActions = actions.forChat(ctx)
+      if (await this.textCommands(chatActions)) {
+        return
+      }
+      if (chatActions.type === 'private' || chatActions.message.includes(config.tgName)) {
+        switch (chatActions.stage) {
           case Stage.waitQuestion:
-            await this.sendQuestionToAi(message, chat, ctx, ai)
+            await chatActions.sendQuestionToAiAction()
             break
           case Stage.waitAnswer:
-            await ctx.reply(
-              '* звук мигающих лампочек намекает тебе, что нужно подождать *')
+            await chatActions.waitLastAction()
             break
           case Stage.waitPassword:
           default:
-            if (message !== config.password && message !== config.tgName + ' ' + config.password) {
-              await ctx.reply('Что нужно сказать?')
-              chat.setStage(Stage.waitPassword)
-            }
-            else {
-              chat.setStage(Stage.waitQuestion)
-              await ctx.reply(`Можешь задавать свои вопросы ID ${chat.id}.`)
-            }
+            await chatActions.checkPasswordAction()
         }
       }
     })
   }
 
-  private async textCommands(text: string, chat: Chat, ctx: Context): Promise<boolean> {
-    const command = text.replace(config.tgName, '').trim()
+  private async textCommands(chatActions: ChatActions): Promise<boolean> {
+    const command = chatActions.message.replace(config.tgName, '').trim()
     switch (command) {
       case '/reset':
-        chat.reset()
-        await ctx.reply('Начинаем разговор заново.')
+        await chatActions.resetDialogAction()
         return true
     }
     return false
-  }
-
-  private async sendQuestionToAi (
-    text: string, chat: Chat, ctx: Context, ai: AI) {
-    chat.setStage(Stage.waitAnswer)
-    const message = await ctx.replyWithMarkdownV2('wait')
-    try {
-      let lastMessageText = ''
-      const answer = await ai.question({
-        text,
-        conversationId: chat.aiDialog.conversationId,
-        id: chat.aiDialog.id,
-      }, async (aiMessage) => {
-        await typeText(ctx)
-        if (lastMessageText !== aiMessage.text && aiMessage.text.length > 5) {
-          lastMessageText = aiMessage.text
-          await editMessage(ctx, chat.id, message.message_id,
-            aiMessage.text + ' |')
-        }
-      })
-      chat.setAIDialog({
-        conversationId: answer.conversationId,
-        id: answer.id,
-      })
-      chat.setStage(Stage.waitQuestion)
-      await ctx.telegram.editMessageText(chat.id, message.message_id,
-        message.message_id.toString(), answer.text, {
-          parse_mode: answer.text.includes('```') ? 'Markdown' : undefined,
-        })
-    }
-    catch (e) {
-      console.error(e)
-      chat.setStage(Stage.waitQuestion)
-      await ctx.reply('* лампочки потухли, звук пропал, приходите завтра *')
-    }
   }
 }
