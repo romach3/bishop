@@ -3,7 +3,5 @@ services:
   app:
     restart: on-failure
     build: .
-    ports:
-      - "3000:3000"
     volumes:
       - ./:/app

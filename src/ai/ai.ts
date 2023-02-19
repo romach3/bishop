@@ -2,7 +2,7 @@ import { ChatGPTAPI, ChatMessage } from 'chatgpt'
 
 export type AIResponse = {
   id: string
-  conversationId: string
+  conversationId?: string
   text: string
 }
 
@@ -17,18 +17,22 @@ export class AI {
     })
   }
 
-  async question(request: AIRequest, progress: (message: ChatMessage) => Promise<void>|void): Promise<AIResponse> {
+  async question(request: AIRequest, progress: (message: AIResponse) => Promise<void>|void): Promise<AIResponse> {
     const res = await this.instance.sendMessage(request.text, {
       conversationId: request.conversationId || undefined,
       parentMessageId: request.id || undefined,
       promptPrefix: 'use markdown for code. Ты телеграм-бот по имени Бишоп.',
       onProgress: (message: ChatMessage) => {
-        void progress(message)
+        void progress({
+          id: message.id,
+          conversationId: message.conversationId,
+          text: message.text,
+        })
       }
     })
     return {
       id: res.id,
-      conversationId: res.conversationId || '',
+      conversationId: res.conversationId,
       text: res.text
     }
   }

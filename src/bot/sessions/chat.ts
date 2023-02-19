@@ -11,19 +11,16 @@ export type ChatSession = {
   id: number
   stage: Stage
   hasAIDialog: boolean
-  aiDialog: Omit<AIResponse, 'text'>
+  aiDialog: Partial<Omit<AIResponse, 'text'>>
 }
 
-export type ChatAIStage = Omit<AIResponse, 'text'>
+export type ChatAIStage = Partial<Omit<AIResponse, 'text'>>
 
 export class Chat {
   id: number
   stage: Stage = Stage.init
   hasAIDialog = false
-  aiDialog: ChatAIStage = {
-    conversationId: '',
-    id: '',
-  }
+  aiDialog: ChatAIStage = {}
 
   constructor (id: number) {
     this.id = id
@@ -41,8 +38,8 @@ export class Chat {
 
   reset() {
     this.hasAIDialog = false
-    this.aiDialog.id = ''
-    this.aiDialog.conversationId = ''
+    this.aiDialog.id = undefined
+    this.aiDialog.conversationId = undefined
   }
 
   restore(session: ChatSession) {
